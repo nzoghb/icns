@@ -8,13 +8,35 @@ The ICNS's job is to map human-readable names like 'alice.icp' to machine-readab
 
 While the ICNS bears similarities to the Domain Name System (DNS) protocol, it is more comparable to Ethereum Name Service (ENS) in its design. Like DNS and ENS, ICNS operates on a system of dot-separated hierarchical names called domains, with the owner of a domain having full control over subdomains.
 
-Top-level domains, like '.icp', are owned by canisters called registrars, which specify rules governing the allocation of their subdomains. Anyone may, by following the rules imposed by these registrar canisters, obtain ownership of a domain for their own use. Because of the hierarchal nature of ICNS, anyone who owns a domain at any level may configure subdomains - for themselves or others - as desired. For instance, if Alice owns 'alice.icp', she can create 'pay.alice.icp' and configure it as she wishes.
+Top-level domains, like '.icp', are owned by canisters called registrars, which specify rules governing the allocation of their subdomains. Anyone may, by following the rules imposed by these registrar canisters, obtain ownership of a domain for their own use. Because of the hierarchal nature of ICNS, anyone who owns a domain at any level may configure subdomains—for themselves or others—as desired. For instance, if Alice owns 'alice.icp', she can create 'pay.alice.icp' and configure it as she wishes.
 
 A feature that allows ICNS to stand apart from ENS is that it reduces the need for indirection when referencing assets hosted through decentralized storage (e.g. via IPFS). Additionally, the extensibility and upgradability of canisters themselves prove to unlock incredible potential for the evolution of name records; governance systems and sophisticated market systems can be built on top of the ICNS protol.
 
 ## Architecture
 
+ICNS has two principal components: the registry, and resolvers.
+
 ![ICNS Architecture Overview](./img/arch.png)
+
+The ICNS registry consists of a single smart contract that maintains a list of all domains and subdomains, and stores three critical pieces of information about each:
+
+- The owner of the domain
+- The resolver for the domain
+- The caching expiry time for all records under the domain
+
+The owner of a domain may be either a person or a canister. A registrar is simply a canister that owns a domain and issues subdomains of that domain to users that follow some set of rules defined in the contract.
+
+Owners of domains in the ICNS registry may:
+
+- Set the resolver and expiry for the domain
+- Transfer ownership of the domain to another principal
+- Change the ownership of subdomains
+
+The ICNS registry is deliberately straightforward and exists only to map from a name to the resolver responsible for it.
+
+Resolvers are responsible for the actual process of translating names into entities. Any canister that implements the relevant standards may act as a resolver in ICNS. General-purpose resolver implementations are offered for users whose requirements are straightforward, such as serving an infrequently changed principal for a name.
+
+Each record type—principals, IPFS content hash, and so forth—defines a method or methods that a resolver must implement in order to provide records of that kind. New record types may be defined at any time via a governance-driven standardization process, with no need to make changes to the ICNS registry or to existing resolvers in order to support them.
 
 ## Canisters
 
