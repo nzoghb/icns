@@ -8,10 +8,12 @@ actor {
 
     let TLD = "icp";
 
-    public shared(msg) func init() : async () {
-        let registry = await Registry.Registry();
-        let registrar = await Registrar.RegistrarCore(msg.caller, Principal.fromActor(registry), TLD);
-        let resolver = await Resolver.ResolverText(msg.caller);
+    public shared(msg) func init() : async (Principal, Principal, Principal) {
+        let registry = Principal.fromActor(await Registry.Registry());
+        let registrar = Principal.fromActor(await Registrar.RegistrarCore(msg.caller, registry, TLD));
+        let resolver = Principal.fromActor(await Resolver.ResolverText(msg.caller));
+
+        (registry, registrar, resolver)
     };
 
 };
