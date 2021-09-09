@@ -14,7 +14,7 @@ A feature that allows ICNS to stand apart from ENS is that it reduces the need f
 
 ## Architecture
 
-![ICNS Architecture Overview](./img/arch.svg)
+![ICNS Architecture Overview](./img/arch.png)
 
 ## Canisters
 
