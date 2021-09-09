@@ -4,11 +4,11 @@ import Hash "mo:base/Hash";
 import Array "mo:base/Array";
 import Iter "mo:base/Iter";
 import Option "mo:base/Option";
-import AID "../ext/AccountIdentifier";
-import ExtCore "../ext/Core";
-import ExtCommon "../ext/Common";
-import ExtAllowance "../ext/Allowance";
-import ExtNonFungible "../ext/NonFungible";
+import AID "AccountIdentifier";
+import ExtCore "Core";
+import ExtCommon "Common";
+import ExtAllowance "Allowance";
+import ExtNonFungible "NonFungible";
 
 /*
 Features:
@@ -53,7 +53,20 @@ shared (install) actor class ICNS(initial_minter: Principal) = this {
     var purchased_domains = HashMap.HashMap<Text, Text>(0, Text.equal, Text.hash);
     var domain_owner_map = HashMap.HashMap<Principal, Text>(0, Text.equal, Text.hash);
 
-    /// Show all public methods available in this canister
+    /// Show extension methods supported in this canister
+    /// Per standard, this function should return all Extension methods being supported 
+    /// by canister, as our canister do not support other Extension methods, it returns
+    /// an empty array.
+    public query func extensions() : async [Extension] {
+        return [];
+    };
+
+    /// This method lets caller to buy a domain name if it's still available
+    /// This method calls mint() method internally, to make a domain_name minted/registered
+    /// before making it availabe for caller's purchase
+    public shared(msg) func transfer(request: TransferRequest) : async TransferResponse {
+        
+    };
 
     /// Show domain names by Principal
     public query func balance(request : BalanceRequest) : async BalanceResponse {
@@ -96,7 +109,7 @@ shared (install) actor class ICNS(initial_minter: Principal) = this {
     //     return Option.get(canister_id, "");
     // };
 
-    /// List all domain names taken
+    /// Prints all domain names taken, and their owners
     public func list(): async Text {
         return await printHashmap(map);
     };
