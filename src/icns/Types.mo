@@ -16,13 +16,19 @@ module {
         #neuron_id;
     };
 
+    public type ResolverResponse = {
+        #text : Text;
+        #neuron_id : Nat64;
+        #other : Blob;
+    };
+
     public func hashForHashes(x: Hash.Hash) : Hash.Hash { x };
 
     public func recordHumanReadable(record: Record) : Text {
         var retval = "  {\n";
-        retval #= "    owner" # Principal.toText(record.owner) # "; ";
-        retval #= "resolver" # Principal.toText(record.resolver) # "; ";
-        retval #= "expiry" # Int.toText(record.expiry) # ";\n";
+        retval #= "    owner: " # Principal.toText(record.owner) # "; ";
+        retval #= "resolver: " # Principal.toText(record.resolver) # "; ";
+        retval #= "expiry: " # Int.toText(record.expiry) # ";\n";
         retval #= "  }";
         retval
     };

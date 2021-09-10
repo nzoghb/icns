@@ -1,4 +1,3 @@
-import Hash "mo:base/Hash";
 import HashMap "mo:base/HashMap";
 import Iter "mo:base/Iter";
 import Option "mo:base/Option";
@@ -10,21 +9,21 @@ import Types "./Types";
 actor class ResolverText(initial_owner: Principal) {
 
     stable var owner = initial_owner;
-    stable var persisted_data: [(Hash.Hash, Text.Text)] = [];
+    stable var persisted_data: [(Text, Text)] = [];
 
-    var data = HashMap.HashMap<Hash.Hash, Text.Text>(0, Hash.equal, Types.hashForHashes);
+    var data = HashMap.HashMap<Text, Text>(0, Text.equal, Text.hash);
 
     public query func resolverType() : async Types.ResolverType {
         return #text;
     };
 
-    public query func get(record_hash: Hash.Hash) : async Text {
-        Option.get(data.get(record_hash), "")
+    public query func get(entry: Text) : async Text {
+        Option.get(data.get(entry), "")
     };
 
-    public shared(msg) func set(record_hash: Hash.Hash, text: Text) : async Bool {
+    public shared(msg) func set(entry: Text, text: Text) : async Bool {
         if (msg.caller == owner) {
-            data.put(record_hash, text);
+            data.put(entry, text);
             return true;
         };
         false
@@ -35,7 +34,7 @@ actor class ResolverText(initial_owner: Principal) {
     };
 
     system func postupgrade() {
-        data := HashMap.fromIter(persisted_data.vals(), persisted_data.size(), Hash.equal, Types.hashForHashes);
+        data := HashMap.fromIter(persisted_data.vals(), persisted_data.size(), Text.equal, Text.hash);
         persisted_data := [];
     };
 

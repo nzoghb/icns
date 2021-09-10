@@ -1,4 +1,3 @@
-import Hash "mo:base/Hash";
 import HashMap "mo:base/HashMap";
 import Iter "mo:base/Iter";
 import Nat64 "mo:base/Nat64";
@@ -13,25 +12,25 @@ actor class ResolverNeuron(initial_owner: Principal) {
     type NeuronId = Nat64.Nat64;
 
     stable var owner = initial_owner;
-    stable var persisted_data: [(Hash.Hash, NeuronId)] = [];
+    stable var persisted_data: [(Text, NeuronId)] = [];
 
-    var data = HashMap.HashMap<Hash.Hash, NeuronId>(0, Hash.equal, Types.hashForHashes);
+    var data = HashMap.HashMap<Text, NeuronId>(0, Text.equal, Text.hash);
 
     public query func resolverType() : async Types.ResolverType {
         return #neuron_id;
     };
 
-    public query func get(record_hash: Hash.Hash) : async NeuronId {
+    public query func get(entry: Text) : async NeuronId {
         let dummy_val : Nat64 = 0;
-        Option.get(data.get(record_hash), dummy_val)
+        Option.get(data.get(entry), dummy_val)
     };
 
-    public shared(msg) func set(record_hash: Hash.Hash, neuron_id: NeuronId) : async Bool {
-        if (msg.caller == owner) {
-            data.put(record_hash, neuron_id);
+    public shared(msg) func set(entry: Text, neuron_id: NeuronId) : async Bool {
+        // if (msg.caller == owner) {
+            data.put(entry, neuron_id);
             return true;
-        };
-        false
+        // };
+        // false
     };
 
     system func preupgrade() {
@@ -39,7 +38,7 @@ actor class ResolverNeuron(initial_owner: Principal) {
     };
 
     system func postupgrade() {
-        data := HashMap.fromIter(persisted_data.vals(), persisted_data.size(), Hash.equal, Types.hashForHashes);
+        data := HashMap.fromIter(persisted_data.vals(), persisted_data.size(), Text.equal, Text.hash);
         persisted_data := [];
     };
 

@@ -58,3 +58,4 @@ Resolvers implement a general-purpose ICNS resolver that is suitable for most st
 - UTS-46 normalization
 - Minimal governance for proposing new TLDs
 - Extensible governance for evolving registrars through DAOs
+- Marketplace integration

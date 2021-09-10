@@ -9,42 +9,55 @@ import Time "mo:base/Time";
 
 import Registry "./Registry";
 
-actor class RegistrarCore(owner: Principal, registry: Principal, my_node: Text) {
+actor class RegistrarCore(owner: Principal, registry: Principal, root_entity: Text) {
 
     stable var grace_period: Time.Time = 1000000;
     stable var owners: [Principal] = [owner];
     stable var persisted_expiries: [(Text, Time.Time)] = [];
+    stable var ROOT = "";
 
     let REGISTRY = actor (Principal.toText(registry)) : Registry.Registry;
     var expiries = HashMap.HashMap<Text.Text, Time.Time>(0, Text.equal, Text.hash);
 
-    public query func available(node: Text) : async Bool {
-        _available(node)
-    };
-    
-    public query func getExpiry(node: Text) : async ?Time.Time {
-        expiries.get(node)
+    public query func getRoot() : async Text.Text {
+        ROOT
     };
 
-    public func registerNode(node: Text, owner: Principal, duration: Time.Time) : async () {
-        if (_available(node)) {
+    public query func available(entity: Text) : async Bool {
+        _available(entity)
+    };
+
+    public query func getExpiry(entity: Text) : async ?Time.Time {
+        expiries.get(entity)
+    };
+
+    public func registerEntity(entity: Text, owner: Principal, duration: Time.Time) : async () {
+        if (_available(entity)) {
             let expiry = Time.now() + duration;
-            expiries.put(node, Time.now() + duration);
-            ignore await REGISTRY.createSubRecord(Text.hash(my_node), node, owner, expiry);
+            expiries.put(entity, expiry);
+            ignore await REGISTRY.createSubRecord(Text.hash(root_entity), entity, owner, expiry);
         };
     };
 
-    public func renew(node: Text, duration: Time.Time) : async ?Time.Time {
-        if (duration > 0 and not _available(node)) {
-            let new_expiry = switch (expiries.get(node)) {
+    public func renew(entity: Text, duration: Time.Time) : async ?Time.Time {
+        if (duration > 0 and not _available(entity)) {
+            let new_expiry = switch (expiries.get(entity)) {
                 case (?exp) { exp };
                 case (_) { P.unreachable() };
             };
-            expiries.put(node, new_expiry);
-            ignore await REGISTRY.updateRecordResolverOrExpiry(Text.hash(node), null, ?new_expiry);
-            return expiries.get(node);
+            expiries.put(entity, new_expiry);
+            ignore await REGISTRY.updateRecordResolverOrExpiry(Text.hash(entity), null, ?new_expiry);
+            return expiries.get(entity);
         };
         null
+    };
+
+    public shared(msg) func registerRoot(root: Text, resolver: Principal, duration: Time.Time) : async Bool {
+        // if (onlyOwners(msg.caller)) {
+            let response = await REGISTRY.createTopLevelRecord(root, resolver, Time.now() + duration);
+            if (response) { ROOT := root; };
+            response
+        // };
     };
 
     public shared(msg) func setGracePeriod(new_grace_period: Time.Time) : async Bool {
@@ -73,7 +86,7 @@ actor class RegistrarCore(owner: Principal, registry: Principal, my_node: Text) 
 
     public shared(msg) func migrateRegistrar(new_registrar: Principal) : async Bool {
         if (onlyOwners(msg.caller)) {
-            return await REGISTRY.transferRecord(Text.hash(my_node), new_registrar);
+            return await REGISTRY.transferRecord(Text.hash(root_entity), new_registrar);
         };
         false
     };
@@ -87,8 +100,8 @@ actor class RegistrarCore(owner: Principal, registry: Principal, my_node: Text) 
         false
     };
 
-    func _available(node: Text) : Bool {
-        switch (expiries.get(node)) {
+    func _available(entity: Text) : Bool {
+        switch (expiries.get(entity)) {
             case (?expiry) {
                 (expiry + grace_period) < Time.now()
             };
